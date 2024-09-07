@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Hotel {
+  id     String @id @default(uuid())
+  userId String @unique
+  title  String @db.Text
+  //   In Prisma, when you define a String field, it is usually stored in the database as a VARCHAR, which has a limit on how much text it can store (usually 255 characters or up to a few thousand characters).
+
+  // Sometimes, you need to store more text, like a blog post, a comment, or a user bio, which can be much longer than 255 characters. In such cases, Prisma allows you to map your String field to a TEXT column in the database by using the @db.Text attribute.
+  image               String
+  country             String
+  state               String
+  city                String
+  locationDescription String
+  gym                 Boolean  @default(false)
+  spa                 Boolean  @default(false)
+  bar                 Boolean  @default(false)
+  laundry             Boolean  @default(false)
+  restraunt           Boolean  @default(false)
+  shopping            Boolean  @default(false)
+  freeParking         Boolean  @default(false)
+  bikeRental          Boolean  @default(false)
+  freeWifi            Boolean  @default(false)
+  movieNights         Boolean  @default(false)
+  swimmingPool        Boolean  @default(false)
+  coffeeshop          Boolean  @default(false)
+  addedAt             DateTime @default(now())
+  updatedAt           DateTime @default(now())
+
+  rooms    Room[]
+  bookings Booking[]
+}
+
+model Room {
+  id             String  @id @default(uuid())
+  title          String
+  description    String
+  bedCount       Int     @default(0)
+  guestCount     Int     @default(0)
+  bathroomCount  Int     @default(0)
+  kingBed        Int     @default(0)
+  QueenBed       Int     @default(0)
+  image          String
+  breakFastPrice Int
+  roomPrice      Int
+  roomService    Boolean @default(false)
+  TV             Boolean @default(false)
+  balcony        Boolean @default(false)
+  freeWifi       Boolean @default(false)
+  cityView       Boolean @default(false)
+  oceanView      Boolean @default(false)
+  forestView     Boolean @default(false)
+  mountainView   Boolean @default(false)
+  airCondition   Boolean @default(false)
+  soundProof     Boolean @default(false)
+  hotelId        String
+
+  Hotel Hotel? @relation(fields: [hotelId], references: [id])
+
+  Booking Booking[]
+
+  @@index([hotelId])
+}
+
+model Booking {
+  id                String   @id @default(uuid())
+  userName          String
+  userId            String
+  hotelId           String
+  roomId            String
+  hotelOwnerId      String
+  startDate         DateTime
+  endDate           DateTime
+  breakFastIncluded Boolean
+  currency          String
+  totalPrice        Int
+  paymentStatus     Boolean  @default(false)
+  paymentIntentId   String   @unique
+  bookedAt          DateTime @default(now())
+
+  Hotel Hotel? @relation(fields: [hotelId], references: [id])
+  Room  Room?  @relation(fields: [roomId], references: [id])
+
+  @@index([hotelId])
+  @@index([roomId])
+}

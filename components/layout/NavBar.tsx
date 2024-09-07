@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import SearchInput from "../SearchInput";
+import { ModeToggle } from "../theme-toggle";
+import { NavMenu } from "./NavMenu";
 
 const NavBar = () => {
   const router = useRouter(); // Call useRouter to initialize the router object
@@ -29,12 +31,18 @@ const NavBar = () => {
           </div>
           
          <div className="flex gap-3 items-center">
-            <div>Theme</div>
+            <div>
+              <ModeToggle />
+              < NavMenu />
+            </div>
+
             <UserButton showName />
+
             {!userId && <>
               <Button onClick={()=> router.push('/sign-in')} variant='outline' size='sm'>Sign In</Button>
               <Button onClick={()=> router.push('/sign-up')} size='sm'>Sign Up</Button>
             </>}
+
          </div>
         </div>
        </Container>
