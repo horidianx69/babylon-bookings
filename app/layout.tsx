@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
 import NavBar from "@/components/layout/NavBar";
 import { ThemeProvider } from "@/components/theme-provider";
+import  Container  from "@/components/Container";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,7 +38,9 @@ export default function RootLayout({
         <main className="flex flex-col min-h-screen bg-secondary">
           <NavBar/>
           <section className="flex grow">
-            {children}
+            <Container>
+              {children}
+            </Container>
           </section>
         </main>
         </ThemeProvider>
