@@ -46,7 +46,7 @@ const formSchema = z.object({
     .string()
     .min(10, { message: "Hotel Description of min 10 characters is required" }),
   image: z.string().min(1, { message: "Hotel image is required" }),
-  country: z.string().min(3, { message: "country is required" }),
+  country: z.string().min(1, { message: "country is required" }),
   state: z.string().optional(),
   city: z.string().optional(),
   locationDescription: z.string().min(10, {
@@ -108,10 +108,11 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
 
   useEffect(() => {
     if (typeof image === "string") {
-      form.setValue("image", image);
-      shouldValidateImage: true;
-      shouldDirty: true;
-      shouldTouch: true;
+      form.setValue("image", image, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
     }
   }, [image]);
 
@@ -130,7 +131,7 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
     if (stateCities) {
       setCities(stateCities);
     }
-  }, [form.watch("country")]);
+  }, [form.watch("country"), form.watch("state")]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
@@ -349,7 +350,7 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Free Parking</FormLabel>
+                        <FormLabel>Bike Rental</FormLabel>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -369,7 +370,7 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Bike Rental</FormLabel>
+                        <FormLabel>Free Parking</FormLabel>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -389,7 +390,7 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Free Parking</FormLabel>
+                        <FormLabel>Free Wifi</FormLabel>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -418,26 +419,6 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
                   <FormField
                     control={form.control}
                     name="swimmingPool"
-                    render={({ field }) => (
-                      <FormItem
-                        className="flex flex-row items-end 
-                      space-x-3 rounded-md border p-4 shadow-sm"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel>Free Parking</FormLabel>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="freeParking"
                     render={({ field }) => (
                       <FormItem
                         className="flex flex-row items-end 
