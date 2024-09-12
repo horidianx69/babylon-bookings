@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Hotel, Room } from "@prisma/client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import axios from "axios";
@@ -21,8 +21,17 @@ import { Textarea } from "../ui/textarea";
 import { Checkbox } from "../ui/checkbox";
 import { UploadButton } from "../uploadthing";
 import Image from "next/image";
-import { Loader2, XCircle } from "lucide-react";
+import { Loader2, PencilLine, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import useLocation from "@/hooks/useLocation";
+import { ICity, IState, State } from "country-state-city";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddHotelFormProps {
   hotel: HotelWithRooms | null;
@@ -61,10 +70,14 @@ const formSchema = z.object({
 
 const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
   const [image, setImage] = useState<string | undefined>(hotel?.image);
+  const [imageIsDeleting, setImageIsDeleting] = useState(false);
+  const [state, setState] = useState<IState[]>([]);
+  const [cities, setCities] = useState<ICity[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
-
-  const [imageIsDeleting, setImageIsDeleting] = useState(false);
+  const { getAllCountries, getCountryStates, getStateCities } = useLocation();
+  const countries = getAllCountries();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -93,6 +106,32 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
     },
   });
 
+  useEffect(() => {
+    if (typeof image === "string") {
+      form.setValue("image", image);
+      shouldValidateImage: true;
+      shouldDirty: true;
+      shouldTouch: true;
+    }
+  }, [image]);
+
+  useEffect(() => {
+    const selectedCountry = form.watch("country");
+    const countryStates = getCountryStates(selectedCountry);
+    if (countryStates) {
+      setState(countryStates);
+    }
+  }, [form.watch("country")]);
+
+  useEffect(() => {
+    const selectedCountry = form.watch("country");
+    const selectedState = form.watch("state");
+    const stateCities = getStateCities(selectedCountry, selectedState);
+    if (stateCities) {
+      setCities(stateCities);
+    }
+  }, [form.watch("country")]);
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
@@ -110,7 +149,7 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
           setImage("");
           toast({
             variant: "success",
-            description: "Image Deleted Successfully",
+            description: "Image Deleted Successfully ☠️☠️",
           });
         }
       })
@@ -502,9 +541,173 @@ const AddHotelForm = ({ hotel }: AddHotelFormProps) => {
                 )}
               />
             </div>
-            <div className="flex-1 flex flex-col gap-6">part 2</div>
+            <div className="flex-1 flex flex-col gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Country *</FormLabel>
+                      <FormDescription>
+                        In which country is your hotel located?
+                      </FormDescription>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue
+                            defaultValue={field.value}
+                            placeholder="Select Country"
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map((country) => {
+                            return (
+                              <SelectItem
+                                key={country.isoCode}
+                                value={country.isoCode}
+                              >
+                                {country.name}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select State</FormLabel>
+                      <FormDescription>
+                        In which State is your hotel located?
+                      </FormDescription>
+                      <Select
+                        disabled={isLoading || state.length < 1}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue
+                            defaultValue={field.value}
+                            placeholder="Select State"
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {state.map((state) => {
+                            return (
+                              <SelectItem
+                                key={state.isoCode}
+                                value={state.isoCode}
+                              >
+                                {state.name}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select City</FormLabel>
+                    <FormDescription>
+                      In which city is your hotel located?
+                    </FormDescription>
+                    <Select
+                      disabled={isLoading || cities.length < 1}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue
+                          defaultValue={field.value}
+                          placeholder="Select a City"
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map((city) => {
+                          return (
+                            <SelectItem key={city.name} value={city.name}>
+                              {city.name}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="locationDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location Description *</FormLabel>
+                    <FormDescription>
+                      Provide a detailed description of where your hotel is
+                      located...
+                    </FormDescription>
+                    <FormControl>
+                      <Textarea
+                        placeholder="eg: Located at the end of the heavens."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-between gap-2 flex-wrap">
+                {hotel ? (
+                  <>
+                    <Button className="max-w-[150px]" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4" /> Updating
+                        </>
+                      ) : (
+                        <>
+                          <PencilLine className="mr-2 h-4 w-4" /> Update
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <Button className="max-w-[150px]" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4" />
+                        Creating
+                      </>
+                    ) : (
+                      <>
+                        <PencilLine className="mr-2 h-4 w-4" />
+                        Create Hotel
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <Button type="submit">Submit</Button>
         </form>
       </Form>
     </div>
